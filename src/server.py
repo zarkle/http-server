@@ -1,6 +1,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import json
+from cowpy import cow
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -12,10 +13,51 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
 
-            self.wfile.write(b'You did something!')
+            self.wfile.write(b"""<!DOCTYPE html>
+<html>
+<head>
+    <title> cowsay </title>
+</head>
+<body>
+    <header>
+        <nav>
+        <ul>
+            <li><a href="/cowsay">cowsay</a></li>
+        </ul>
+        </nav>
+    <header>
+    <main>
+        <p>cowsay is a program that generates ASCII pictures of a cow with a message. This is my first time making an HTTP server in Python</p>
+    </main>
+</body>
+</html>""")
             return
 
         elif parsed_path.path == '/cowsay':
+            self.send_response(200)
+            self.end_headers()
+
+            self.wfile.write(b"""<!DOCTYPE html>
+<html>
+<head>
+    <title> cowsay </title>
+</head>
+<body>
+    <header>
+        <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+        </ul>
+        </nav>
+    <header>
+    <main>
+        <p>A message about other things you can do</p>
+    </main>
+</body>
+</html>""")
+
+
+        elif parsed_path.path == '/cow?msg=my+message':
             try:
                 cat = json.loads(parsed_qs['category'][0])
             except KeyError:
@@ -28,9 +70,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.end_headers
             self.wfile.write(b'We did the thing with the qs')
             return
-
-        elif parsed_path.path == '/cow?msg=my+message':
-            pass
 
         else:
             self.send_response(404)
