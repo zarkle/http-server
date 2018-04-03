@@ -2,6 +2,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import json
 from cowpy import cow
+import sys
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -51,24 +52,25 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         </nav>
     <header>
     <main>
-        <p>A message about other things you can do</p>
+        <p>A message about other things you can do. After the port number, add <b>cow?msg="message"</b> in the address bar, replacing message with your message </p>
     </main>
 </body>
 </html>""")
+            return
 
-
-        elif parsed_path.path == '/cow?msg=my+message':
+        elif parsed_path.path == '/cow':
             try:
-                cat = json.loads(parsed_qs['category'][0])
-            except KeyError:
+                daemon = cow.Daemon()
+                msg = daemon.milk(json.loads(parsed_qs['msg'][0]))
+            except (KeyError, json.decoder.JSONDecodeError):
                 self.send_response(400)
-                self.end_headers
+                self.end_headers()
                 self.wfile.write(b'You did a bad thing')
                 return
 
             self.send_response(200)
-            self.end_headers
-            self.wfile.write(b'We did the thing with the qs')
+            self.end_headers()
+            self.wfile.write(msg.encode('utf8'))
             return
 
         else:
@@ -77,7 +79,33 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(b'Not Found')
 
     def do_POST(self):
-        parse_qs
+        parsed_path = urlparse(self.path)
+        parsed_qs = parse_qs(parsed_path.query)
+
+        if parsed_path.path == '/cow':
+            self.send_response(200)
+            self.end_headers()
+            # post_dict = {}
+
+            try:
+                daemon = cow.Daemon()
+                msg = daemon.milk(json.dumps(parsed_qs['msg'][0]))
+                post_dict = {'content': msg}
+            except (KeyError, json.decoder.JSONDecodeError):
+                self.send_response(400)
+                self.end_headers()
+                self.wfile.write(b'You did a bad thing')
+                return
+
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(json.dumps(post_dict).encode('utf8'))
+            return
+
+        else:
+            self.send_response(404)
+            self.end_headers()
+            self.wfile.write(b'Not Found')
 
 
 def create_server():
