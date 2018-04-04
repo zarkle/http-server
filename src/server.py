@@ -2,11 +2,12 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import json
 from cowpy import cow
-import sys
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    """request handler"""
     def do_GET(self):
+        """handle GET routes"""
         parsed_path = urlparse(self.path)
         parsed_qs = parse_qs(parsed_path.query)
 
@@ -65,7 +66,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             except (KeyError, json.decoder.JSONDecodeError):
                 self.send_response(400)
                 self.end_headers()
-                self.wfile.write(b'You did a bad thing')
+                self.wfile.write(b'Incorrect format')
                 return
 
             self.send_response(200)
@@ -79,14 +80,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(b'Not Found')
 
     def do_POST(self):
+        """handle POST routes"""
         parsed_path = urlparse(self.path)
         parsed_qs = parse_qs(parsed_path.query)
 
         if parsed_path.path == '/cow':
-            self.send_response(200)
-            self.end_headers()
-            # post_dict = {}
-
             try:
                 daemon = cow.Daemon()
                 msg = daemon.milk(json.dumps(parsed_qs['msg'][0]))
@@ -94,7 +92,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             except (KeyError, json.decoder.JSONDecodeError):
                 self.send_response(400)
                 self.end_headers()
-                self.wfile.write(b'You did a bad thing')
+                self.wfile.write(b'Incorrect format')
                 return
 
             self.send_response(200)
@@ -109,10 +107,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 def create_server():
+    """create server"""
     return HTTPServer(('127.0.0.1', 3000), SimpleHTTPRequestHandler)
 
 
 def run_forever():
+    """keep server running forever"""
     server = create_server()
 
     try:
