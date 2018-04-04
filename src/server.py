@@ -89,7 +89,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 content_length = int(self.headers['content-length'])
                 body = json.loads(self.rfile.read(content_length).decode('utf8'))
                 msg = daemon.milk(body['msg'])
-            except (KeyError, json.decoder.JSONDecodeError):
+            except (KeyError, json.decoder.JSONDecodeError) as err:
                 self.send_response(400)
                 self.end_headers()
                 self.wfile.write(b'Incorrect format')
