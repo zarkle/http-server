@@ -12,9 +12,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         parsed_qs = parse_qs(parsed_path.query)
 
         if parsed_path.path == '/':
+            #set header
             self.send_response(200)
+            self.send_header('Content-Type', 'text/html')
             self.end_headers()
 
+            #set body
             self.wfile.write(b"""<!DOCTYPE html>
 <html>
 <head>
@@ -33,7 +36,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     </main>
 </body>
 </html>""")
-            return
 
         elif parsed_path.path == '/cowsay':
             self.send_response(200)
@@ -57,7 +59,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     </main>
 </body>
 </html>""")
-            return
 
         elif parsed_path.path == '/cow':
             try:
@@ -72,7 +73,6 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.end_headers()
             self.wfile.write(msg.encode('utf8'))
-            return
 
         else:
             self.send_response(404)
@@ -82,23 +82,23 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         """handle POST routes"""
         parsed_path = urlparse(self.path)
-        parsed_qs = parse_qs(parsed_path.query)
 
         if parsed_path.path == '/cow':
+            daemon = cow.Daemon()
             try:
-                daemon = cow.Daemon()
-                msg = daemon.milk(json.dumps(parsed_qs['msg'][0]))
-                post_dict = {'content': msg}
-            except (KeyError, json.decoder.JSONDecodeError):
+                content_length = int(self.headers['content-length'])
+                body = json.loads(self.rfile.read(content_length).decode('utf8'))
+                msg = daemon.milk(body['msg'])
+            except (KeyError, json.decoder.JSONDecodeError) as err:
                 self.send_response(400)
                 self.end_headers()
                 self.wfile.write(b'Incorrect format')
                 return
 
             self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps(post_dict).encode('utf8'))
-            return
+            self.wfile.write(json.dumps({'content': msg}).encode('utf8'))
 
         else:
             self.send_response(404)
