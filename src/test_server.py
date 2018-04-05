@@ -66,14 +66,14 @@ def test_server_sends_404_response_header():
     assert response.headers['Server'] == 'BaseHTTP/0.6 Python/3.6.4'
 
 
-def test_server_cow_post_sends_200_response():
+def test_server_cow_post_sends_201_response():
     """test post route works"""
     response = requests.post('http://127.0.0.1:3000/cow', json={'msg': 'test'})
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert 'test' in response.text
 
 
-def test_server_cow_post_sends_200_response_header():
+def test_server_cow_post_sends_201_response_header():
     """test post route works"""
     response = requests.post('http://127.0.0.1:3000/cow', json={'msg': 'test'})
     assert response.headers['Server'] == 'BaseHTTP/0.6 Python/3.6.4'

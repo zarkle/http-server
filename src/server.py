@@ -84,24 +84,26 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         parsed_path = urlparse(self.path)
 
         if parsed_path.path == '/cow':
-            daemon = cow.Daemon()
             try:
-                content_length = int(self.headers['content-length'])
+                content_length = int(self.headers['Content-Length'])
                 body = json.loads(self.rfile.read(content_length).decode('utf8'))
-                msg = daemon.milk(body['msg'])
             except (KeyError, json.decoder.JSONDecodeError) as err:
                 self.send_response(400)
                 self.end_headers()
                 self.wfile.write(b'Incorrect format')
                 return
 
-            self.send_response(200)
+            self.send_response(201)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
+
+            daemon = cow.Daemon()
+            msg = daemon.milk(body['msg'])
             self.wfile.write(json.dumps({'content': msg}).encode('utf8'))
 
         else:
             self.send_response(404)
+            self.send_header('Content-Type', 'text/html')
             self.end_headers()
             self.wfile.write(b'Not Found')
 
